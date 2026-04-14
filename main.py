@@ -22,7 +22,7 @@ CANAL_TAX = 1493431079464603668
 CANAL_VALOR = 1493433809264185344
 
 # =========================
-# FLASK (Render keep alive)
+# FLASK (KEEP ALIVE)
 # =========================
 app = Flask(__name__)
 
@@ -33,18 +33,18 @@ def home():
 def run_web():
     app.run(host="0.0.0.0", port=PORT)
 
-threading.Thread(target=run_web, daemon=True).start()
-
 # =========================
-# DISCORD BOT
+# BOT DISCORD
 # =========================
 intents = discord.Intents.default()
+intents.guilds = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 synced = False
 
 # =========================
-# CONVERSOR DE VALORES
+# CONVERSOR
 # =========================
 def convert(v):
     v = v.lower().replace(",", "").strip()
@@ -58,8 +58,8 @@ def convert(v):
     else:
         return int(v)
 
-# normaliza vehicles (evita erro de "não encontrado")
-vehicles_normalized = {k.lower(): v for k, v in vehicles.items()}
+# normaliza vehicles
+vehicles_normalized = {k.lower().strip(): v for k, v in vehicles.items()}
 
 # =========================
 # ON READY
@@ -72,7 +72,7 @@ async def on_ready():
         await bot.tree.sync()
         synced = True
 
-    print("🚜 Farmly online!")
+    print(f"🚜 Farmly online como {bot.user}")
 
 # =========================
 # /tax
@@ -91,30 +91,30 @@ async def tax(interaction: discord.Interaction, valor: str):
     try:
         amount = convert(valor)
 
-        receive = int(amount * 0.9)
+        receive = int(amount * (1 - TAX))
         tax_taken = amount - receive
 
-        send_needed = math.ceil(amount / 0.9)
+        send_needed = math.ceil(amount / (1 - TAX))
         tax_needed = send_needed - amount
 
-        msg = f"""🌾 **Calculando taxa de 10% para 💰 {amount:,}**
+        msg = f"""🌾 **Calculando taxa de 10% 💰 {amount:,}**
 
-📤 **Se você ENVIAR esse valor:**
-Recebedor recebe: 💰 {receive:,}
-(Taxa cobrada: {tax_taken:,})
+📤 ENVIANDO:
+Recebe: 💰 {receive:,}
+Taxa: {tax_taken:,}
 
-📥 **Se você quiser RECEBER esse valor:**
-Remetente precisa enviar: 💰 {send_needed:,}
-(Taxa cobrada: {tax_needed:,})
+📥 RECEBENDO:
+Precisa enviar: 💰 {send_needed:,}
+Taxa: {tax_needed:,}
 
-━━━━━━━━━━━━━━━━━━
-💰 Farmly™ Calculadora"""
+━━━━━━━━━━━━━━
+Farmly™"""
 
         await interaction.response.send_message(msg)
 
-    except Exception as e:
+    except Exception:
         await interaction.response.send_message(
-            f"❌ Valor inválido: {valor}",
+            "❌ Valor inválido. Ex: 10m, 500k, 1b",
             ephemeral=True
         )
 
@@ -127,7 +127,7 @@ async def valor(interaction: discord.Interaction, nome: str):
 
     if interaction.channel.id != CANAL_VALOR:
         await interaction.response.send_message(
-            "❌ Use o comando de VALOR no canal #💸│checar-valor .",
+            "❌ Use o comando VALOR no canal #💸│checar-valor .",
             ephemeral=True
         )
         return
@@ -157,8 +157,8 @@ async def valor(interaction: discord.Interaction, nome: str):
 💎 Raridade:
 {v['rarity']}
 
-━━━━━━━━━━━━━━━━━━
-🌾 Farmly™ Valores FAF"""
+━━━━━━━━━━━━━━
+Farmly™ Valores"""
 
     else:
         msg = "❌ Veículo não encontrado."
@@ -166,6 +166,8 @@ async def valor(interaction: discord.Interaction, nome: str):
     await interaction.response.send_message(msg)
 
 # =========================
-# START BOT
+# START
 # =========================
-bot.run(TOKEN)
+if __name__ == "__main__":
+    threading.Thread(target=run_web, daemon=True).start()
+    bot.run(TOKEN)
