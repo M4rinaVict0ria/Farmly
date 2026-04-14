@@ -5,12 +5,24 @@ import math
 import os
 import threading
 from flask import Flask
+from values import vehicles
 
+# =========================
+# CONFIG
+# =========================
 TOKEN = os.getenv("TOKEN")
 PORT = int(os.getenv("PORT", 10000))
 
+if not TOKEN:
+    raise ValueError("TOKEN não encontrado nas variáveis de ambiente")
+
+TAX = 0.10
+
+CANAL_TAX = 1493431079464603668
+CANAL_VALOR = 1493433809264185344
+
 # =========================
-# WEB SERVER (Render)
+# FLASK (KEEP ALIVE)
 # =========================
 app = Flask(__name__)
 
@@ -25,15 +37,14 @@ def run_web():
 # BOT DISCORD
 # =========================
 intents = discord.Intents.default()
+intents.guilds = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-TAX = 0.10
+synced = False
 
 # =========================
-# CONVERTER VALORES
-# k = mil
-# m = milhão
-# b = bilhão
+# CONVERSOR
 # =========================
 def convert(v):
     v = v.lower().replace(",", "").strip()
@@ -47,55 +58,116 @@ def convert(v):
     else:
         return int(v)
 
+# normaliza vehicles
+vehicles_normalized = {k.lower().strip(): v for k, v in vehicles.items()}
+
 # =========================
-# BOT ONLINE
+# ON READY
 # =========================
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print("Farmly online!")
+    global synced
+
+    if not synced:
+        await bot.tree.sync()
+        synced = True
+
+    print(f"🚜 Farmly online como {bot.user}")
 
 # =========================
-# COMANDO /tax
+# /tax
 # =========================
 @bot.tree.command(name="tax", description="Calcula taxa de 10%")
 @app_commands.describe(valor="Exemplo: 10m, 500k, 1b")
 async def tax(interaction: discord.Interaction, valor: str):
 
+    if interaction.channel.id != CANAL_TAX:
+        await interaction.response.send_message(
+            "❌ Use o comando de TAX no canal #🏧││calcular .",
+            ephemeral=True
+        )
+        return
+
     try:
         amount = convert(valor)
 
-        # Se enviar esse valor
-        receive = int(amount * 0.9)
+        receive = int(amount * (1 - TAX))
         tax_taken = amount - receive
 
-        # Se quiser receber esse valor
-        send_needed = math.ceil(amount / 0.9)
+        send_needed = math.ceil(amount / (1 - TAX))
         tax_needed = send_needed - amount
 
-        msg = f"""🌾 **Calculando taxa de 10% para :coin: {amount:,}**
+        msg = f"""🌾 **Calculando taxa de 10% 💰 {amount:,}**
 
-📤 **Se você ENVIAR esse valor:**
-Recebedor recebe: :coin: {receive:,}
-(Taxa cobrada: {tax_taken:,})
+📤 ENVIANDO:
+Recebe: 💰 {receive:,}
+Taxa: {tax_taken:,}
 
-📥 **Se você quiser RECEBER esse valor:**
-Remetente precisa enviar: :coin: {send_needed:,}
-(Taxa cobrada: {tax_needed:,})
+📥 RECEBENDO:
+Precisa enviar: 💰 {send_needed:,}
+Taxa: {tax_needed:,}
 
-━━━━━━━━━━━━━━━━━━
-💰 **Farmly™ Calculadora de Trocas**"""
+━━━━━━━━━━━━━━
+Farmly™"""
 
         await interaction.response.send_message(msg)
 
-    except:
+    except Exception:
         await interaction.response.send_message(
-            "❌ Valor inválido. Use exemplos: 10m, 500k, 1b",
+            "❌ Valor inválido. Ex: 10m, 500k, 1b",
             ephemeral=True
         )
 
 # =========================
-# INICIAR
+# /valor
 # =========================
-threading.Thread(target=run_web).start()
-bot.run(TOKEN)
+@bot.tree.command(name="valor", description="Ver valor de veículo")
+@app_commands.describe(nome="Nome do veículo")
+async def valor(interaction: discord.Interaction, nome: str):
+
+    if interaction.channel.id != CANAL_VALOR:
+        await interaction.response.send_message(
+            "❌ Use o comando VALOR no canal #💸│checar-valor .",
+            ephemeral=True
+        )
+        return
+
+    nome = nome.lower().strip()
+
+    if nome in vehicles_normalized:
+        v = vehicles_normalized[nome]
+
+        msg = f"""🚜 **{v['nome']}**
+
+📦 Obtenção:
+{v['obtainable']}
+
+📝 Nota:
+{v['nota']}
+
+💰 Valor:
+💰 {v['valor']}
+
+📈 Estabilidade:
+{v['stability']}
+
+🔥 Demanda:
+{v['demand']}
+
+💎 Raridade:
+{v['rarity']}
+
+━━━━━━━━━━━━━━
+Farmly™ Valores"""
+
+    else:
+        msg = "❌ Veículo não encontrado."
+
+    await interaction.response.send_message(msg)
+
+# =========================
+# START
+# =========================
+if __name__ == "__main__":
+    threading.Thread(target=run_web, daemon=True).start()
+    bot.run(TOKEN)
