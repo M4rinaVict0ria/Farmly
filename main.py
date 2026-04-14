@@ -5,6 +5,7 @@ import math
 import os
 import threading
 from flask import Flask
+from values import vehicles
 
 TOKEN = os.getenv("TOKEN")
 PORT = int(os.getenv("PORT", 10000))
@@ -94,6 +95,37 @@ Remetente precisa enviar: :coin: {send_needed:,}
             ephemeral=True
         )
 
+@bot.tree.command(name="valor", description="Mostra valor de veículos")
+@app_commands.describe(nome="Nome do carro")
+async def valor(interaction: discord.Interaction, nome: str):
+
+    key = nome.lower().strip()
+
+    if key not in vehicles:
+        await interaction.response.send_message(
+            "❌ Veículo não encontrado.",
+            ephemeral=True
+        )
+        return
+
+    car = vehicles[key]
+
+    msg = f"""{car['nome']}
+Obtainable:
+{car['obtainable']}
+📝 Note:
+{car['note']}
+Value:
+:fafcoin: {car['value']}
+Stability:
+{car['stability']}
+Demand:
+{car['demand']}
+Rarity:
+{car['rarity']}
+"""
+
+    await interaction.response.send_message(msg)
 # =========================
 # INICIAR
 # =========================
