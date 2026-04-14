@@ -127,4 +127,8 @@ Rarity:
 # START
 # =========================
 threading.Thread(target=run_web, daemon=True).start()
-bot.run(TOKEN)
+while True:
+    try:
+        bot.run(TOKEN)
+    except Exception as e:
+        print("Bot caiu:", e)
