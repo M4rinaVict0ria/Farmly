@@ -66,16 +66,23 @@ async def tax(interaction: discord.Interaction, valor: str):
     try:
         amount = convert(valor)
 
+        # Se enviar esse valor
         receive = int(amount * 0.9)
+        tax_taken = amount - receive
+
+        # Se quiser receber esse valor
         send_needed = math.ceil(amount / 0.9)
+        tax_needed = send_needed - amount
 
         msg = f"""🌾 **Calculando taxa de 10% para 💰 {amount:,}**
 
-📤 Se enviar:
-Recebe: {receive:,}
+📤 Se você ENVIAR esse valor:
+Recebedor recebe: {receive:,}
+(Taxa cobrada: {tax_taken:,})
 
-📥 Para receber esse valor:
-Enviar: {send_needed:,}
+📥 Se você quiser RECEBER esse valor:
+Remetente precisa enviar: {send_needed:,}
+(Taxa cobrada: {tax_needed:,})
 
 ━━━━━━━━━━━━━━
 💰 Farmly™ Calculadora de Trocas"""
