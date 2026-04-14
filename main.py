@@ -28,13 +28,8 @@ def run_web():
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-TAX = 0.10
-
 # =========================
 # CONVERTER VALORES
-# k = mil
-# m = milhão
-# b = bilhão
 # =========================
 def convert(v):
     v = v.lower().replace(",", "").strip()
@@ -53,11 +48,16 @@ def convert(v):
 # =========================
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} commands")
+    except Exception as e:
+        print("Sync error:", e)
+
     print("Farmly online!")
 
 # =========================
-# COMANDO /tax
+# /tax
 # =========================
 @bot.tree.command(name="tax", description="Calcula taxa de 10%")
 @app_commands.describe(valor="Exemplo: 10m, 500k, 1b")
@@ -66,35 +66,31 @@ async def tax(interaction: discord.Interaction, valor: str):
     try:
         amount = convert(valor)
 
-        # Se enviar esse valor
         receive = int(amount * 0.9)
-        tax_taken = amount - receive
-
-        # Se quiser receber esse valor
         send_needed = math.ceil(amount / 0.9)
-        tax_needed = send_needed - amount
 
-        msg = f"""🌾 **Calculando taxa de 10% para :coin: {amount:,}**
+        msg = f"""🌾 **Calculando taxa de 10% para 💰 {amount:,}**
 
-📤 **Se você ENVIAR esse valor:**
-Recebedor recebe: :coin: {receive:,}
-(Taxa cobrada: {tax_taken:,})
+📤 Se enviar:
+Recebe: {receive:,}
 
-📥 **Se você quiser RECEBER esse valor:**
-Remetente precisa enviar: :coin: {send_needed:,}
-(Taxa cobrada: {tax_needed:,})
+📥 Para receber esse valor:
+Enviar: {send_needed:,}
 
-━━━━━━━━━━━━━━━━━━
-💰 **Farmly™ Calculadora de Trocas**"""
+━━━━━━━━━━━━━━
+Farmly™"""
 
         await interaction.response.send_message(msg)
 
-    except:
+    except Exception:
         await interaction.response.send_message(
             "❌ Valor inválido. Use exemplos: 10m, 500k, 1b",
             ephemeral=True
         )
 
+# =========================
+# /valor
+# =========================
 @bot.tree.command(name="valor", description="Mostra valor de veículos")
 @app_commands.describe(nome="Nome do carro")
 async def valor(interaction: discord.Interaction, nome: str):
@@ -126,8 +122,9 @@ Rarity:
 """
 
     await interaction.response.send_message(msg)
+
 # =========================
-# INICIAR
+# START
 # =========================
-threading.Thread(target=run_web).start()
+threading.Thread(target=run_web, daemon=True).start()
 bot.run(TOKEN)
