@@ -98,4 +98,4 @@ Remetente precisa enviar: :coin: {send_needed:,}
 # INICIAR
 # =========================
 threading.Thread(target=run_web).start()
-print("TOKEN:", TOKEN)
+bot.run(TOKEN)
