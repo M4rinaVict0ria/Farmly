@@ -78,7 +78,7 @@ Recebe: {receive:,}
 Enviar: {send_needed:,}
 
 ━━━━━━━━━━━━━━
-Farmly™"""
+💰 Farmly™ Calculadora de Trocas"""
 
         await interaction.response.send_message(msg)
 
@@ -125,7 +125,7 @@ async def valor(interaction: discord.Interaction, nome: str):
 
     embed.add_field(
         name="💰 Value",
-        value=f":fafcoin: {car['value']}",
+        value=f":coin: {car['value']}",
         inline=True
     )
 
