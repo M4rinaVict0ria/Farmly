@@ -170,4 +170,4 @@ Farmly™ Valores"""
 # =========================
 if __name__ == "__main__":
     threading.Thread(target=run_web, daemon=True).start()
-    bot.run(TOKEN)
+    print("TOKEN:", TOKEN)bot.run(TOKEN)
