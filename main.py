@@ -73,14 +73,14 @@ async def tax(interaction: discord.Interaction, valor: str):
         send_needed = math.ceil(amount / 0.9)
         tax_needed = send_needed - amount
 
-        msg = f"""🌾 **Calculando taxa de 10% para :fafcoin: {amount:,}**
+        msg = f"""🌾 **Calculando taxa de 10% para :coin: {amount:,}**
 
 📤 **Se você ENVIAR esse valor:**
-Recebedor recebe: :fafcoin: {receive:,}
+Recebedor recebe: :coin: {receive:,}
 (Taxa cobrada: {tax_taken:,})
 
 📥 **Se você quiser RECEBER esse valor:**
-Remetente precisa enviar: :fafcoin: {send_needed:,}
+Remetente precisa enviar: :coin: {send_needed:,}
 (Taxa cobrada: {tax_needed:,})
 
 ━━━━━━━━━━━━━━━━━━
