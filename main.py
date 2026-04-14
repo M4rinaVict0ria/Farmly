@@ -106,22 +106,53 @@ async def valor(interaction: discord.Interaction, nome: str):
 
     car = vehicles[key]
 
-    msg = f"""{car['nome']}
-Obtainable:
-{car['obtainable']}
-📝 Note:
-{car['note']}
-Value:
-:fafcoin: {car['value']}
-Stability:
-{car['stability']}
-Demand:
-{car['demand']}
-Rarity:
-{car['rarity']}
-"""
+    embed = discord.Embed(
+        title=car["nome"],
+        color=0x2ecc71
+    )
 
-    await interaction.response.send_message(msg)
+    embed.add_field(
+        name="📦 Obtainable",
+        value=car["obtainable"],
+        inline=False
+    )
+
+    embed.add_field(
+        name="📝 Note",
+        value=car["note"],
+        inline=False
+    )
+
+    embed.add_field(
+        name="💰 Value",
+        value=f":fafcoin: {car['value']}",
+        inline=True
+    )
+
+    embed.add_field(
+        name="📊 Stability",
+        value=car["stability"],
+        inline=True
+    )
+
+    embed.add_field(
+        name="📈 Demand",
+        value=car["demand"],
+        inline=True
+    )
+
+    embed.add_field(
+        name="⭐ Rarity",
+        value=car["rarity"],
+        inline=True
+    )
+
+    embed.set_image(
+        url=car["image"]
+    ) 
+
+
+    await interaction.response.send_message(embed=embed)
 
 # =========================
 # START
