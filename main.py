@@ -7,11 +7,22 @@ import threading
 from flask import Flask
 from values import vehicles
 
-TOKEN = os.getenv("MTQ5MzQyMjg1NTA4NDMxMDYwOA.GQJkNx.eBquwkZyR44ybk3B9yctJLmDHPceaHGVF0Ny30")
+# =========================
+# CONFIG
+# =========================
+TOKEN = os.getenv("TOKEN")
 PORT = int(os.getenv("PORT", 10000))
 
+if not TOKEN:
+    raise ValueError("TOKEN não encontrado nas variáveis de ambiente")
+
+TAX = 0.10
+
+CANAL_TAX = 1493431079464603668
+CANAL_VALOR = 1493433809264185344
+
 # =========================
-# WEB SERVER (Render)
+# FLASK (Render keep alive)
 # =========================
 app = Flask(__name__)
 
@@ -22,22 +33,18 @@ def home():
 def run_web():
     app.run(host="0.0.0.0", port=PORT)
 
+threading.Thread(target=run_web, daemon=True).start()
+
 # =========================
-# BOT DISCORD
+# DISCORD BOT
 # =========================
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-TAX = 0.10
-
-CANAL_TAX = 1493431079464603668
-CANAL_VALOR = 1493433809264185344
+synced = False
 
 # =========================
-# CONVERTER VALORES
-# k = mil
-# m = milhão
-# b = bilhão
+# CONVERSOR DE VALORES
 # =========================
 def convert(v):
     v = v.lower().replace(",", "").strip()
@@ -51,16 +58,24 @@ def convert(v):
     else:
         return int(v)
 
+# normaliza vehicles (evita erro de "não encontrado")
+vehicles_normalized = {k.lower(): v for k, v in vehicles.items()}
+
 # =========================
-# BOT ONLINE
+# ON READY
 # =========================
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print("Farmly online!")
+    global synced
+
+    if not synced:
+        await bot.tree.sync()
+        synced = True
+
+    print("🚜 Farmly online!")
 
 # =========================
-# COMANDO /tax
+# /tax
 # =========================
 @bot.tree.command(name="tax", description="Calcula taxa de 10%")
 @app_commands.describe(valor="Exemplo: 10m, 500k, 1b")
@@ -68,7 +83,7 @@ async def tax(interaction: discord.Interaction, valor: str):
 
     if interaction.channel.id != CANAL_TAX:
         await interaction.response.send_message(
-            "❌ Use o comando de TAX no canal #🏧││calcular",
+            "❌ Use o comando de TAX no canal #🏧││calcular .",
             ephemeral=True
         )
         return
@@ -82,68 +97,68 @@ async def tax(interaction: discord.Interaction, valor: str):
         send_needed = math.ceil(amount / 0.9)
         tax_needed = send_needed - amount
 
-        msg = f"""🌾 **Calculando taxa de 10% para :coin: {amount:,}**
+        msg = f"""🌾 **Calculando taxa de 10% para 💰 {amount:,}**
 
 📤 **Se você ENVIAR esse valor:**
-Recebedor recebe: :coin: {receive:,}
+Recebedor recebe: 💰 {receive:,}
 (Taxa cobrada: {tax_taken:,})
 
 📥 **Se você quiser RECEBER esse valor:**
-Remetente precisa enviar: :coin: {send_needed:,}
+Remetente precisa enviar: 💰 {send_needed:,}
 (Taxa cobrada: {tax_needed:,})
 
 ━━━━━━━━━━━━━━━━━━
-💰 **Farmly™ Calculadora de Trocas**"""
+💰 Farmly™ Calculadora"""
 
         await interaction.response.send_message(msg)
 
-    except:
+    except Exception as e:
         await interaction.response.send_message(
-            "❌ Valor inválido. Use exemplos: 10m, 500k, 1b",
+            f"❌ Valor inválido: {valor}",
             ephemeral=True
         )
 
 # =========================
-# COMANDO /valor
+# /valor
 # =========================
 @bot.tree.command(name="valor", description="Ver valor de veículo")
 @app_commands.describe(nome="Nome do veículo")
 async def valor(interaction: discord.Interaction, nome: str):
-    
+
     if interaction.channel.id != CANAL_VALOR:
         await interaction.response.send_message(
-            "❌ Use o comando de VALOR no canal #💸│checar-valor.",
+            "❌ Use o comando de VALOR no canal #💸│checar-valor .",
             ephemeral=True
         )
         return
 
-    nome = nome.lower()
+    nome = nome.lower().strip()
 
-    if nome in vehicles:
-        v = vehicles[nome]
+    if nome in vehicles_normalized:
+        v = vehicles_normalized[nome]
 
         msg = f"""🚜 **{v['nome']}**
 
-📦 **Obtenção:**
+📦 Obtenção:
 {v['obtainable']}
 
-📝 **Nota:**
+📝 Nota:
 {v['nota']}
 
-💰 **Valor:**
-:fafcoin: {v['valor']}
+💰 Valor:
+💰 {v['valor']}
 
-📈 **Estabilidade:**
+📈 Estabilidade:
 {v['stability']}
 
-🔥 **Demanda:**
+🔥 Demanda:
 {v['demand']}
 
-💎 **Raridade:**
+💎 Raridade:
 {v['rarity']}
 
 ━━━━━━━━━━━━━━━━━━
-🌾 **Farmly™ Valores FAF**"""
+🌾 Farmly™ Valores FAF"""
 
     else:
         msg = "❌ Veículo não encontrado."
@@ -151,7 +166,6 @@ async def valor(interaction: discord.Interaction, nome: str):
     await interaction.response.send_message(msg)
 
 # =========================
-# INICIAR
+# START BOT
 # =========================
-threading.Thread(target=run_web).start()
 bot.run(TOKEN)
