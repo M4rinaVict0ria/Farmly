@@ -30,6 +30,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 TAX = 0.10
 
+CANAL_TAX = 1493431079464603668
+CANAL_VALOR = 1493433809264185344
+
 # =========================
 # CONVERTER VALORES
 # k = mil
@@ -62,6 +65,13 @@ async def on_ready():
 @bot.tree.command(name="tax", description="Calcula taxa de 10%")
 @app_commands.describe(valor="Exemplo: 10m, 500k, 1b")
 async def tax(interaction: discord.Interaction, valor: str):
+
+    if interaction.channel.id != CANAL_TAX:
+        await interaction.response.send_message(
+            "❌ Use o comando de TAX no canal #🏧││calcular",
+            ephemeral=True
+        )
+        return
 
     try:
         amount = convert(valor)
@@ -99,6 +109,13 @@ Remetente precisa enviar: :coin: {send_needed:,}
 @bot.tree.command(name="valor", description="Ver valor de veículo")
 @app_commands.describe(nome="Nome do veículo")
 async def valor(interaction: discord.Interaction, nome: str):
+    
+    if interaction.channel.id != CANAL_VALOR:
+        await interaction.response.send_message(
+            "❌ Use o comando de VALOR no canal #💸│checar-valor.",
+            ephemeral=True
+        )
+        return
 
     nome = nome.lower()
 
