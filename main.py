@@ -3,8 +3,20 @@ from discord.ext import commands
 from discord import app_commands
 import math
 import os
+import threading
+from flask import Flask
 
 TOKEN = os.getenv("TOKEN")
+PORT = int(os.getenv("PORT", 10000))
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Farmly online!"
+
+def run_web():
+    app.run(host="0.0.0.0", port=PORT)
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
 
@@ -13,36 +25,10 @@ async def on_ready():
     await bot.tree.sync()
     print("Farmly online!")
 
-def convert(v):
-    v = v.lower()
-
-    if v.endswith("k"):
-        return int(float(v[:-1]) * 1000)
-    elif v.endswith("m"):
-        return int(float(v[:-1]) * 1000000)
-    elif v.endswith("b"):
-        return int(float(v[:-1]) * 1000000000)
-    return int(v)
-
 @bot.tree.command(name="tax", description="Calculate 10% tax")
 async def tax(interaction: discord.Interaction, valor: str):
+    await interaction.response.send_message("Farmly funcionando!")
 
-    amount = convert(valor)
-
-    receive = int(amount * 0.9)
-    send_needed = math.ceil(amount / 0.9)
-
-    await interaction.response.send_message(
-f"""🌾 Farmly Tax Calculator
-
-For {amount:,}
-
-📤 If you SEND:
-Receiver gets: {receive:,}
-
-📥 If you want to RECEIVE:
-Sender must send: {send_needed:,}
-"""
-)
+threading.Thread(target=run_web).start()
 
 bot.run(TOKEN)
