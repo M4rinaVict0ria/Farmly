@@ -22,17 +22,19 @@ def run_web():
     app.run(host="0.0.0.0", port=PORT)
 
 # =========================
-# DISCORD BOT
+# BOT DISCORD
 # =========================
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 TAX = 0.10
 
-# Converter valores
+# =========================
+# CONVERTER VALORES
 # k = mil
 # m = milhão
 # b = bilhão
+# =========================
 def convert(v):
     v = v.lower().replace(",", "").strip()
 
@@ -45,49 +47,55 @@ def convert(v):
     else:
         return int(v)
 
+# =========================
+# BOT ONLINE
+# =========================
 @bot.event
 async def on_ready():
     await bot.tree.sync()
     print("Farmly online!")
 
 # =========================
-# /tax
+# COMANDO /tax
 # =========================
-@bot.tree.command(name="tax", description="Calculate 10% transaction tax")
-@app_commands.describe(valor="Example: 10m, 500k, 1b")
+@bot.tree.command(name="tax", description="Calcula taxa de 10%")
+@app_commands.describe(valor="Exemplo: 10m, 500k, 1b")
 async def tax(interaction: discord.Interaction, valor: str):
 
     try:
         amount = convert(valor)
 
         # Se enviar esse valor
-        receive = int(amount * (1 - TAX))
+        receive = int(amount * 0.9)
         tax_taken = amount - receive
 
         # Se quiser receber esse valor
-        send_needed = math.ceil(amount / (1 - TAX))
+        send_needed = math.ceil(amount / 0.9)
         tax_needed = send_needed - amount
 
-        msg = f"""🌾 Calculating 10% transaction tax for {amount:,}
+        msg = f"""🌾 **Calculando taxa de 10% para :fafcoin: {amount:,}**
 
-📤 If you SEND this amount:
-Receiver gets: {receive:,}
-(Tax taken: {tax_taken:,})
+📤 **Se você ENVIAR esse valor:**
+Recebedor recebe: :fafcoin: {receive:,}
+(Taxa cobrada: {tax_taken:,})
 
-📥 If you want to RECEIVE this amount:
-Sender must send: {send_needed:,}
-(Tax taken: {tax_needed:,})"""
+📥 **Se você quiser RECEBER esse valor:**
+Remetente precisa enviar: :fafcoin: {send_needed:,}
+(Taxa cobrada: {tax_needed:,})
+
+━━━━━━━━━━━━━━━━━━
+💰 **Farmly™ Calculadora de Trocas**"""
 
         await interaction.response.send_message(msg)
 
     except:
         await interaction.response.send_message(
-            "❌ Invalid value. Use examples: 10m, 500k, 1b",
+            "❌ Valor inválido. Use exemplos: 10m, 500k, 1b",
             ephemeral=True
         )
 
 # =========================
-# RUN
+# INICIAR
 # =========================
 threading.Thread(target=run_web).start()
 bot.run(TOKEN)
