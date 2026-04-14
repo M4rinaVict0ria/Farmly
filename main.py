@@ -7,7 +7,7 @@ import threading
 from flask import Flask
 from values import vehicles
 
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.getenv("MTQ5MzQyMjg1NTA4NDMxMDYwOA.GQJkNx.eBquwkZyR44ybk3B9yctJLmDHPceaHGVF0Ny30")
 PORT = int(os.getenv("PORT", 10000))
 
 # =========================
