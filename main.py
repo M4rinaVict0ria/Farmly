@@ -5,6 +5,7 @@ import math
 import os
 import threading
 from flask import Flask
+from values import vehicles
 
 TOKEN = os.getenv("TOKEN")
 PORT = int(os.getenv("PORT", 10000))
@@ -65,11 +66,9 @@ async def tax(interaction: discord.Interaction, valor: str):
     try:
         amount = convert(valor)
 
-        # Se enviar esse valor
         receive = int(amount * 0.9)
         tax_taken = amount - receive
 
-        # Se quiser receber esse valor
         send_needed = math.ceil(amount / 0.9)
         tax_needed = send_needed - amount
 
@@ -93,6 +92,46 @@ Remetente precisa enviar: :coin: {send_needed:,}
             "❌ Valor inválido. Use exemplos: 10m, 500k, 1b",
             ephemeral=True
         )
+
+# =========================
+# COMANDO /valor
+# =========================
+@bot.tree.command(name="valor", description="Ver valor de veículo")
+@app_commands.describe(nome="Nome do veículo")
+async def valor(interaction: discord.Interaction, nome: str):
+
+    nome = nome.lower()
+
+    if nome in vehicles:
+        v = vehicles[nome]
+
+        msg = f"""🚜 **{v['nome']}**
+
+📦 **Obtenção:**
+{v['obtainable']}
+
+📝 **Nota:**
+{v['nota']}
+
+💰 **Valor:**
+:fafcoin: {v['valor']}
+
+📈 **Estabilidade:**
+{v['stability']}
+
+🔥 **Demanda:**
+{v['demand']}
+
+💎 **Raridade:**
+{v['rarity']}
+
+━━━━━━━━━━━━━━━━━━
+🌾 **Farmly™ Valores FAF**"""
+
+    else:
+        msg = "❌ Veículo não encontrado."
+
+    await interaction.response.send_message(msg)
 
 # =========================
 # INICIAR
